@@ -9,6 +9,7 @@ using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using static AL_Nibras_Ecom_API.Model.Oauth.OAuth;
 
 namespace AL_Nibras_Ecom_API.Controllers.Oauth
 {
@@ -27,8 +28,8 @@ namespace AL_Nibras_Ecom_API.Controllers.Oauth
         }
 
         #region Login
-        [HttpGet("oauth")]
-        public IActionResult oauth([FromHeader] string email, [FromHeader] string Password)
+        [HttpPost("oauth")]
+        public IActionResult oauth([FromBody] PostLogin _lg)
         {
             try
             {
@@ -36,8 +37,8 @@ namespace AL_Nibras_Ecom_API.Controllers.Oauth
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@Flag", 100);
-                parameters.Add("@Email", email);
-                parameters.Add("@Password", Password);
+                parameters.Add("@Email", _lg.email);
+                parameters.Add("@Password", _lg.password);
 
                 var data = _dbcontext.QueryMultiple("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
 

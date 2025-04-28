@@ -809,90 +809,89 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                 parameters.Add("@PageSize", pageSize);
                 parameters.Add("@UserID", 1);
 
-                var result = _dbcontext.Query<dynamic>("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
+                var result = _dbcontext.QueryMultiple("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
 
-                if (result == null || !result.Any())
-                {
-                    _response.isSucess = false;
-                    _response.message = "No data found.";
-                    return NotFound(_response);
-                }
 
-                var products = result
-                .GroupBy(p => p.ProductId)
-                .Select(pGroup =>
-            {
-                var product = new ProductDto
+                var productList = result.Read<dynamic>().ToList(); // Base Products
+                var variantList = result.Read<dynamic>().ToList(); // Variants
+                var priceList = result.Read<dynamic>().ToList();   // Prices
+                var stockList = result.Read<dynamic>().ToList();   // Stocks
+                var imageList = result.Read<dynamic>().ToList();   // Images
+                var productCount = result.Read<dynamic>().ToList();   // Images
+
+
+                var products = productList.Select(prod => new ProductDto
                 {
-                    ProductId = pGroup.Key,
-                    ProductName = pGroup.First().ProductName,
-                    Description = pGroup.First().Description,
-                    CategoryId = pGroup.First().CategoryId,
-                    CategoryName = pGroup.First().CategoryName,
-                    TaxCode = pGroup.First().TaxCode,
-                    ImageUrl = pGroup.First().ImageUrl,
-                    ImageUr2 = pGroup.First().ImageUr2,
-                    ImageUr3 = pGroup.First().ImageUr3,
-                    ImageUrl4 = pGroup.First().ImageUrl4,
-                    BrandID = pGroup.First().BrandID,
-                    BrandName = pGroup.First().BrandName, 
-                    Price = pGroup.First().Price,
-                    Discount = pGroup.First().Discount,
-                    StockQty = pGroup.First().StockQty,  
-                    Variants = pGroup
-                        .GroupBy(v => v.VariantId)
-                        .Select(vGroup =>
+                    ProductId = prod.ProductId,
+                    ProductName = prod.ProductName,
+                    Description = prod.Description,
+                    CategoryId = prod.CategoryId,
+                    CategoryName = prod.CategoryName,
+                    TaxCode = prod.TaxCode,
+                    Images = prod.Images, 
+                    BrandID = prod.BrandID,
+                    BrandName = prod.BrandName,
+                    Price = prod.Price,
+                    DiscountPrice = prod.DiscountPrice,
+                    StockQty = prod.StockQty,
+
+                    Variants = variantList
+                    .Where(v => v.ProductId == prod.ProductId)
+                    .GroupBy(v => v.VariantId)
+                    .Select(vGroup =>
+                    {
+                        var v = vGroup.First();
+                        return new ProductVariantGetDto
                         {
-                            var variant = new ProductVariantGetDto
-                            {
-                                VariantId = vGroup.Key,
-                                BrandId = vGroup.First().VariantBrandId,
-                                BrandName = vGroup.First().VariantBrandName,
-                                ColorId = vGroup.First().ColorId,
-                                ColorName = vGroup.First().ColorName,
-                                HexCode = vGroup.First().HexCode,
-                                SizeId = vGroup.First().SizeId,
-                                SizeLabel = vGroup.First().SizeLabel,
-                                Sku = vGroup.First().Sku, // add this column in your SQL if needed
+                            VariantId = v.VariantId,
+                            BrandId = v.VariantBrandId,
+                            BrandName = v.VariantBrandName,
+                            ColorId = v.ColorId,
+                            ColorName = v.ColorName,
+                            HexCode = v.HexCode,
+                            SizeId = v.SizeId,
+                            SizeLabel = v.SizeLabel,
+                            Sku = v.Sku,
 
-                                Price = new ProductPriceDto
+                            Price = priceList.Where(p => p.VariantId == v.VariantId)
+                                .Select(p => new ProductPriceDto
                                 {
-                                    PriceId = vGroup.First().PriceId,
-                                    Price = vGroup.First().Price,
-                                    DiscountPercentage = vGroup.First().DiscountPercentage,
-                                    DiscountPrice = vGroup.First().DiscountPrice,
-                                    Currency = vGroup.First().Currency
-                                },
+                                    PriceId = p.PriceId,
+                                    Price = p.Price,
+                                    DiscountPercentage = p.DiscountPercentage,
+                                    DiscountPrice = p.DiscountPrice,
+                                    Currency = p.Currency
+                                }).FirstOrDefault(),
 
-                                Stock = new ProductStockDto
+                            Stock = stockList.Where(s => s.VariantId == v.VariantId)
+                                .Select(s => new ProductStockDto
                                 {
-                                    StockId = vGroup.First().StockId,
-                                    Onhand = vGroup.First().Onhand
-                                },
+                                    StockId = s.StockId,
+                                    Onhand = s.Onhand
+                                }).FirstOrDefault(),
 
-                                Images = vGroup
-                                    .Where(i => i.ImageId != null)
-                                    .Select(i => new ProductImageDto
-                                    {
-                                        ImageId = i.ImageId,
-                                        ImageUrl = i.ImageUrl,
-                                        IsPrimary = i.IsPrimary
-                                    }).ToList()
-                            };
+                            Images = imageList.Where(i => i.VariantId == v.VariantId)
+                                .Select(i => new ProductImageDto
+                                {
+                                    imageId = i.ImageId,
+                                    imageUrl = i.ImageUrl,
+                                    isPrimary = i.IsPrimary
+                                }).ToList()
+                        };
+                    }).ToList()
+                }).ToList();
 
-                            return variant;
-                        }).ToList()
+                var totalCount = productCount.FirstOrDefault()?.TotalCount ?? 0;
+
+                var _response = new
+                {
+                    isSucess = true,
+                    message = "Success",
+                    TotalCount = totalCount,
+                    data = products
                 };
 
-                return product;
-            }).ToList();
-
-
-            _response.isSucess = true;
-            _response.message = "Success";
-            _response.data = products;
-
-            return Ok(_response);
+                return Ok(_response);
         }
             catch (Exception ex)
             {

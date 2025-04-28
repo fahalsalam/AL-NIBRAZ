@@ -10,7 +10,7 @@ using System;
 using System.Data;
 using static AL_Nibras_Ecom_API.Model.Masters.Masters;
 
-namespace AL_Nibras_Ecom_API.Controllers
+namespace AL_Nibras_Ecom_API.Controllers.Settings
 {
     [Route("api/")]
     [ApiController]
@@ -21,8 +21,8 @@ namespace AL_Nibras_Ecom_API.Controllers
         private readonly IDbConnection _dbcontext;
         public ConfigController(IDbConnection dbcontext, IOptions<JwtKey> options)
         {
-            this._response = new();
-            this._key = options.Value;
+            _response = new();
+            _key = options.Value;
             _dbcontext = dbcontext;
         }
 
@@ -119,21 +119,21 @@ namespace AL_Nibras_Ecom_API.Controllers
         {
             try
             {
-                // Read the token from the cookie
-                string token = Request.Cookies["AuthToken"];
+                //// Read the token from the cookie
+                //string token = Request.Cookies["AuthToken"];
 
-                if (string.IsNullOrEmpty(token))
-                {
-                    _response.isSucess = false;
-                    _response.message = "Authorization token is missing in cookies.";
-                    return Unauthorized(_response);
-                }
+                //if (string.IsNullOrEmpty(token))
+                //{
+                //    _response.isSucess = false;
+                //    _response.message = "Authorization token is missing in cookies.";
+                //    return Unauthorized(_response);
+                //}
 
-                var tokenClaims = DBOperation.GetJWTTokenClaims(token, _key._jwtKey, true);
+                //var tokenClaims = DBOperation.GetJWTTokenClaims(token, _key._jwtKey, true);
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@Flag", 111);
-                parameters.Add("@ClientId", tokenClaims.ClientId);
+                //parameters.Add("@ClientId", tokenClaims.ClientId);
                 var data = _dbcontext.Query("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
                 _response.isSucess = true;
                 _response.message = "Success";

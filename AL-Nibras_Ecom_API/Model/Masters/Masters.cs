@@ -19,10 +19,11 @@ namespace AL_Nibras_Ecom_API.Model.Masters
 
         public class BrandMaster
         {
+            public int? BrandID { get; set; }
             public string BrandName { get; set; }
             public string ImageUrl { get; set; }
             public bool isActive { get; set; }
-
+            public int? SortOrder { get; set; } 
         }
 
         public class DesktopImageConfig
@@ -33,6 +34,7 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public string Imgurl_4 { get; set; }
             public string Imgurl_5 { get; set; }
             public string Imgurl_6 { get; set; }
+
         }
 
         public class MobileImageConfig
@@ -43,6 +45,7 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public string Imgurl_4 { get; set; }
             public string Imgurl_5 { get; set; }
             public string Imgurl_6 { get; set; }
+
         }
 
         public class TabImageConfig
@@ -53,6 +56,7 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public string Imgurl_4 { get; set; }
             public string Imgurl_5 { get; set; }
             public string Imgurl_6 { get; set; }
+
         }
 
         public class EcommerceConfiy
@@ -74,17 +78,7 @@ namespace AL_Nibras_Ecom_API.Model.Masters
         {
             public List<Colors> Colors { get; set; }
         }
-
-        public class Size
-        {
-            public string SizeLabel { get; set; }
-            public string SizeOrder { get; set; }
-        }
-
-        public class SizeMaster
-        {
-            public List<Size> Size { get; set; }
-        }
+         
 
         public class ProductCreateDto
         {
@@ -92,14 +86,11 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public string? Description { get; set; }
             public int? CategoryId { get; set; }
             public string? TaxCode { get; set; }
-            public string? ImageUrl { get; set; }
-            public string? ImageUr2 { get; set; }
-            public string? ImageUr3 { get; set; }
-            public string? ImageUrl4 { get; set; } 
+            public List<ProductImageDto>Images { get; set; } 
             public int? BrandID { get; set; }  
             public decimal? Price { get; set; }
             public decimal? StockQty { get; set; }
-            public decimal? Discount { get; set; } 
+            public decimal? DiscountPrice { get; set; } 
             public List<ProductVariantDto> Variants { get; set; }
         }
 
@@ -132,9 +123,9 @@ namespace AL_Nibras_Ecom_API.Model.Masters
 
         public class ProductImageDto
         {
-            public int? ImageId { get; set; } 
-            public string? ImageUrl { get; set; }
-            public bool? IsPrimary { get; set; }
+            public int? imageId { get; set; } 
+            public string? imageUrl { get; set; }
+            public bool? isPrimary { get; set; }
         }
 
         public class ProductDto
@@ -145,30 +136,28 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public int CategoryId { get; set; }
             public string? CategoryName { get; set; } 
             public string TaxCode { get; set; }
-            public string? ImageUrl { get; set; }
-            public string? ImageUr2 { get; set; }
-            public string? ImageUr3 { get; set; }
-            public string? ImageUrl4 { get; set; }
+            public string? Images { get; set; } 
             public int? BrandID { get; set; }
             public string? BrandName { get; set; }
             public decimal? Price { get; set; }
             public decimal? StockQty { get; set; }
-            public decimal? Discount { get; set; }
+            public decimal? DiscountPrice { get; set; }
 
             public List<ProductVariantGetDto> Variants { get; set; }
         }
 
         public class ProductVariantGetDto
         {
-            public int VariantId { get; set; }
-            public int BrandId { get; set; }
-            public string BrandName { get; set; }
-            public int ColorId { get; set; }
-            public string ColorName { get; set; }
-            public string HexCode { get; set; } 
-            public int SizeId { get; set; }
-            public string SizeLabel { get; set; } 
-            public string Sku { get; set; }
+            public int? VariantId { get; set; }
+            public int ProductId { get; set; }
+            public int? BrandId { get; set; }
+            public string? BrandName { get; set; }
+            public int? ColorId { get; set; }
+            public string? ColorName { get; set; }
+            public string? HexCode { get; set; } 
+            public int? SizeId { get; set; }
+            public string? SizeLabel { get; set; } 
+            public string? Sku { get; set; }
 
             [JsonConverter(typeof(NestedJsonConverter<ProductPriceDto>))]
             public ProductPriceDto Price { get; set; }
@@ -177,7 +166,15 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public ProductStockDto Stock { get; set; }
 
             public List<ProductImageDto> Images { get; set; }
+        }
+
+        public class UserMaster
+        {
+            public string FullName { get; set; }
+            public string Email { get; set; }
+            public string PhoneNumber { get; set; }
+            public string? PasswordHash { get; set; }
+            public string ImageUrl { get; set; }
         } 
-       
     }
 }
