@@ -96,6 +96,7 @@ namespace AL_Nibras_Ecom_API.Model.Masters
 
         public class ProductVariantDto
         {
+            public int? VariantId { get; set; }
             public int? BrandId { get; set; }
             public int? ColorId { get; set; }
             public int? SizeId { get; set; }
@@ -175,6 +176,17 @@ namespace AL_Nibras_Ecom_API.Model.Masters
             public string PhoneNumber { get; set; }
             public string? PasswordHash { get; set; }
             public string ImageUrl { get; set; }
-        } 
+        }
+
+        public class ProductFilterRequest
+        {
+            public string BrandIDs { get; set; }         
+            public string CategoryIDs { get; set; }       
+            public decimal? MinPrice { get; set; }
+            public decimal? MaxPrice { get; set; }
+            public int PageNumber { get; set; } = 1;
+            public int PageSize { get; set; } = 10;
+            public string SortByPrice { get; set; } = "asc";  
+        }
     }
 }

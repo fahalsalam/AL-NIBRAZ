@@ -243,7 +243,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Orders
 
         #region DELETE Cart
         [HttpDelete("DeleteCart")]
-        public IActionResult deleteCart([FromHeader] int ProductId, [FromHeader] int CartId, [FromHeader] int VariantId)
+        public IActionResult deleteCart( [FromHeader] int CartId)
         {
             try
             {
@@ -262,9 +262,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Orders
                 var parameters = new DynamicParameters();
                 parameters.Add("@Flag", 130);
                 parameters.Add("@UserId", tokenClaims.UserId);
-                parameters.Add("@ProductId", ProductId);
                 parameters.Add("@CartId", CartId);
-                parameters.Add("@VrId", VariantId);
 
                 var data = _dbcontext.Query("SP_Orders", parameters, commandType: CommandType.StoredProcedure);
 
@@ -284,7 +282,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Orders
 
         #region PUT CART
         [HttpPut("putCart")]
-        public IActionResult putCart([FromForm] cartMaster _item, [FromHeader] int CartId)
+        public IActionResult putCart([FromBody] cartMaster _item, [FromHeader] int CartId)
         {
             try
             {
@@ -303,6 +301,8 @@ namespace AL_Nibras_Ecom_API.Controllers.Orders
                 parameters.Add("@UserId", tokenClaims.UserId);
                 parameters.Add("@CartId", CartId);
                 parameters.Add("@Quantity", _item.Quantity);
+                parameters.Add("@VrId", _item.VariantId);
+
                 //parameters.Add("@JsonData", JsonConvert.SerializeObject(_item));
 
                 var data = _dbcontext.Query("SP_Orders", parameters, commandType: CommandType.StoredProcedure);
@@ -531,7 +531,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Orders
         #endregion
 
         // Order
-        
+
         #region postOrders
         [HttpPost("postOrders")]
         public IActionResult postOrders([FromBody] Order_Header _item)

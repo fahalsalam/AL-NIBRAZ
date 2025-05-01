@@ -493,7 +493,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
 
         #region POST SizeMaster
         [HttpPost("postSizeMaster")]
-        public IActionResult postSizeMaster([FromBody] SizeMaster _item)
+        public IActionResult postSizeMaster([FromHeader] string? sizeLable)
         {
             try
             {
@@ -512,7 +512,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                 var parameters = new DynamicParameters();
                 parameters.Add("@Flag", 115);
                 parameters.Add("@UserID", tokenClaims.UserId);
-                parameters.Add("@JsonData", JsonConvert.SerializeObject(_item));
+                parameters.Add("@SizeLable", sizeLable);
 
                 var data = _dbcontext.Query("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
 
@@ -534,7 +534,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
 
         #region PUT SizeMaster
         [HttpPut("putSizeMaster")]
-        public IActionResult putSizeMaster([FromHeader] int SizeId, [FromBody] Size _item)
+        public IActionResult putSizeMaster([FromHeader] int SizeId, [FromHeader] string? sizeLable, [FromHeader] bool? isActive)
         {
             try
             {
@@ -552,7 +552,9 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                 parameters.Add("@Flag", 116);
                 parameters.Add("@UserID", tokenClaims.UserId);
                 parameters.Add("@SizeId", SizeId);
-                parameters.Add("@JsonData", JsonConvert.SerializeObject(_item));
+                parameters.Add("@SizeLable", sizeLable);
+                parameters.Add("@IsActive", isActive);
+
 
                 var data = _dbcontext.Query("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
 
@@ -755,13 +757,55 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                     _response.message = "Authorization token is missing in cookies.";
                     return Unauthorized(_response);
                 }
-
+                
                 var tokenClaims = DBOperation.GetJWTTokenClaims(token, _key._jwtKey, true);
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@Flag", 121);
                 parameters.Add("@ClientID", tokenClaims.ClientId);
                 parameters.Add("@UserID", tokenClaims.UserId);
+                parameters.Add("@JsonData", JsonConvert.SerializeObject(_item));
+                
+                var data = _dbcontext.Query("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
+
+                _response.isSucess = true;
+                _response.message = "Success";
+                _response.data = data;
+
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.isSucess = false;
+                _response.message = ex.Message;
+                return StatusCode(500, _response);
+            }
+        }
+        #endregion
+
+        #region PUT Product Master
+        [HttpPut(template: "putProductMaster")]
+        public IActionResult putProductMaster([FromBody] ProductCreateDto _item, [FromHeader] int? productID)
+        {
+            try
+            {
+                // Read the token from the cookie
+                string token = Request.Cookies["AuthToken"];
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    _response.isSucess = false;
+                    _response.message = "Authorization token is missing in cookies.";
+                    return Unauthorized(_response);
+                }
+
+                var tokenClaims = DBOperation.GetJWTTokenClaims(token, _key._jwtKey, true);
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@Flag", 125);
+                parameters.Add("@ClientID", tokenClaims.ClientId);
+                parameters.Add("@UserID", tokenClaims.UserId);
+                parameters.Add("@ProductId", productID); 
                 parameters.Add("@JsonData", JsonConvert.SerializeObject(_item));
                 var data = _dbcontext.Query("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
 
@@ -783,7 +827,8 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
         #region GET Product Master
         [AllowAnonymous]
         [HttpGet("getProductMaster")]
-        public IActionResult getProductMaster([FromHeader] int page, [FromHeader] int pageSize, [FromHeader] int? productID, [FromHeader] int? categoryID, [FromHeader] int? brandID)
+        public IActionResult getProductMaster([FromHeader] int page, [FromHeader] int pageSize, [FromHeader] int? productID, [FromHeader] string? productName,
+            [FromHeader] int? categoryID, [FromHeader] int? brandID)
         {
             try
             {
@@ -803,6 +848,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                 parameters.Add("@Flag", 122);
                 parameters.Add("@ClientID", 1001);
                 parameters.Add("@ProductId", productID);
+                parameters.Add("@ProductName", productName); 
                 parameters.Add("@BrandID", brandID);
                 parameters.Add("@CategoryId", categoryID);
                 parameters.Add("@PageNumber", page);
@@ -817,7 +863,9 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                 var priceList = result.Read<dynamic>().ToList();   // Prices
                 var stockList = result.Read<dynamic>().ToList();   // Stocks
                 var imageList = result.Read<dynamic>().ToList();   // Images
-                var productCount = result.Read<dynamic>().ToList();   // Images
+                var filterproductCount = result.Read<dynamic>().ToList();   // Filter Product Count
+                var productCount = result.Read<dynamic>().ToList();   // Product Count
+
 
 
                 var products = productList.Select(prod => new ProductDto
@@ -831,7 +879,7 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                     Images = prod.Images, 
                     BrandID = prod.BrandID,
                     BrandName = prod.BrandName,
-                    Price = prod.Price,
+                    Price = prod.ProductPrice,
                     DiscountPrice = prod.DiscountPrice,
                     StockQty = prod.StockQty,
 
@@ -881,18 +929,78 @@ namespace AL_Nibras_Ecom_API.Controllers.Masters
                     }).ToList()
                 }).ToList();
 
-                var totalCount = productCount.FirstOrDefault()?.TotalCount ?? 0;
+                var filtertotalCount = filterproductCount.FirstOrDefault()?.TotalCount ?? 0;
+                var _totalCount = productCount.FirstOrDefault()?.TotalCount ?? 0;
+
 
                 var _response = new
                 {
                     isSucess = true,
                     message = "Success",
-                    TotalCount = totalCount,
+                    filterTotalCount = filtertotalCount,
+                    totalCount = _totalCount,
                     data = products
                 };
 
                 return Ok(_response);
         }
+            catch (Exception ex)
+            {
+                _response.isSucess = false;
+                _response.message = ex.Message;
+                return StatusCode(500, _response);
+            }
+        }
+        #endregion
+
+        #region Product Filter
+        [HttpGet("getProductFilter")]
+        public IActionResult getProductFilter([FromBody] ProductFilterRequest request)
+        {
+            try
+            {
+                // Read the token from the cookie
+                string token = Request.Cookies["AuthToken"];
+                
+                if (string.IsNullOrEmpty(token))
+                {
+                    _response.isSucess = false;
+                    _response.message = "Authorization token is missing in cookies.";
+                    return Unauthorized(_response);
+                }
+               
+                var tokenClaims = DBOperation.GetJWTTokenClaims(token, _key._jwtKey, true);
+
+                var brandIDs = string.IsNullOrWhiteSpace(request.BrandIDs) ? null : request.BrandIDs;
+                var categoryIDs = string.IsNullOrWhiteSpace(request.CategoryIDs) ? null : request.CategoryIDs;
+                var minPrice = request.MinPrice;
+                var maxPrice = request.MaxPrice;
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@Flag", 126);
+                parameters.Add("@ClientID", tokenClaims.ClientId);
+                parameters.Add("@BrandIDs", request.BrandIDs);
+                parameters.Add("@CategoryIDs", request.CategoryIDs);
+                parameters.Add("@MinPrice", request.MinPrice);
+                parameters.Add("@MaxPrice", request.MaxPrice);
+                parameters.Add("@PageNumber", request.PageNumber);
+                parameters.Add("@PageSize", request.PageSize);
+                parameters.Add("@SortByPrice", request.SortByPrice);
+                var data = _dbcontext.Query("SP_Masters", parameters, commandType: CommandType.StoredProcedure);
+
+                if(data == null || !data.Any())
+                {
+                    _response.isSucess = false;
+                    _response.message = "No products found.";
+                    return NotFound(_response);
+                }
+
+                _response.isSucess = true;
+                _response.message = "Success";
+                _response.data = data;
+                
+                return Ok(_response);
+            }
             catch (Exception ex)
             {
                 _response.isSucess = false;

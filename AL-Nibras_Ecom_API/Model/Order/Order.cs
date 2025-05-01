@@ -24,6 +24,9 @@
             public string City { get; set; }
             public string PinCode { get; set; }
             public string PhoneNumber { get; set; }
+            public string AddressLabel { get; set; }
+            public string LandMark { get; set; }
+
         }
 
         public class Order_Header
